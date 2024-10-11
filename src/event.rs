@@ -142,7 +142,6 @@ pub enum StartCause {
 #[derive(Debug, Clone, PartialEq)]
 pub enum WindowEvent {
     /// The activation token was delivered back and now could be used.
-    #[cfg_attr(not(any(x11_platform, wayland_platform)), allow(rustdoc::broken_intra_doc_links))]
     /// Delivered in response to [`request_activation_token`].
     ///
     /// [`request_activation_token`]: crate::platform::startup_notify::WindowExtStartupNotify::request_activation_token
@@ -698,7 +697,7 @@ pub struct KeyEvent {
     // Allowing `broken_intra_doc_links` for `logical_key`, because
     // `key_without_modifiers` is not available on all platforms
     #[cfg_attr(
-        not(any(windows_platform, macos_platform, x11_platform, wayland_platform)),
+        not(any(windows_platform, macos_platform, linux_platform)),
         allow(rustdoc::broken_intra_doc_links)
     )]
     /// This value is affected by all modifiers except <kbd>Ctrl</kbd>.

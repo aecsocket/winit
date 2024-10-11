@@ -10,7 +10,7 @@
 //! handle events.
 use std::fmt;
 use std::marker::PhantomData;
-#[cfg(any(x11_platform, wayland_platform))]
+#[cfg(any(linux_platform))]
 use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 #[cfg(not(web_platform))]

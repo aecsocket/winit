@@ -5,7 +5,7 @@ use crate::window::Fullscreen as RootFullscreen;
 mod android;
 #[cfg(target_vendor = "apple")]
 mod apple;
-#[cfg(any(x11_platform, wayland_platform))]
+// #[cfg(linux_platform)] // TODO
 mod linux;
 #[cfg(orbital_platform)]
 mod orbital;
@@ -18,7 +18,7 @@ mod windows;
 use self::android as platform;
 #[cfg(target_vendor = "apple")]
 use self::apple as platform;
-#[cfg(any(x11_platform, wayland_platform))]
+// #[cfg(linux_platform)] // TODO
 use self::linux as platform;
 #[cfg(orbital_platform)]
 use self::orbital as platform;
@@ -65,8 +65,7 @@ impl From<Fullscreen> for RootFullscreen {
     not(windows_platform),
     not(macos_platform),
     not(android_platform),
-    not(x11_platform),
-    not(wayland_platform),
+    not(linux_platform),
     not(web_platform),
     not(orbital_platform),
 ))]
