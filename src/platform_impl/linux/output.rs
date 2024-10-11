@@ -1,6 +1,6 @@
 use std::num::{NonZeroU16, NonZeroU32};
 
-use adw::{gdk, prelude::*};
+use adw::prelude::*;
 use dpi::{PhysicalPosition, PhysicalSize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -12,6 +12,16 @@ pub struct OwnedDisplayHandle {
 impl rwh_06::HasDisplayHandle for OwnedDisplayHandle {
     fn display_handle(&self) -> Result<rwh_06::DisplayHandle<'_>, rwh_06::HandleError> {
         display_handle_from_gdk(&self.inner)
+    }
+}
+
+impl OwnedDisplayHandle {
+    #[cfg(feature = "rwh_06")]
+    #[inline]
+    pub fn raw_display_handle_rwh_06(
+        &self,
+    ) -> Result<rwh_06::RawDisplayHandle, rwh_06::HandleError> {
+        rwh_06::HasDisplayHandle::display_handle(self).map(|handle| handle.as_raw())
     }
 }
 

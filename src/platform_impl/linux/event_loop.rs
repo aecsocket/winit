@@ -1,16 +1,15 @@
 use std::cell::Cell;
 
-use adw::{gdk, glib, prelude::*, ColorScheme};
-use dpi::LogicalSize;
+use adw::prelude::*;
 
 use crate::{
     application::ApplicationHandler,
     error::EventLoopError,
     event_loop::ControlFlow,
-    window::{Fullscreen, Theme},
+    window::{Theme, WindowAttributes},
 };
 
-use super::{display_handle_from_gdk, output::MonitorHandle, OwnedDisplayHandle};
+use super::{display_handle_from_gdk, MonitorHandle, OwnedDisplayHandle, Window};
 
 #[derive(Debug)]
 pub struct EventLoop {
@@ -26,7 +25,7 @@ impl EventLoop {
         adw::init()
             .map_err(|err| os_error!(format!("failed to initialize `libadwaita`: {err}")))?;
         let display = gdk::Display::default()
-            .ok_or_else(|| os_error!("failed to get default `libadwaita` Wayland display"))?;
+            .ok_or_else(|| os_error!("failed to get default Wayland display"))?;
 
         let main_context = glib::MainContext::default();
         Ok(Self {
@@ -71,76 +70,9 @@ impl crate::event_loop::ActiveEventLoop for ActiveEventLoop {
 
     fn create_window(
         &self,
-        window_attributes: crate::window::WindowAttributes,
+        window_attributes: WindowAttributes,
     ) -> Result<Box<dyn crate::window::Window>, crate::error::RequestError> {
-        let builder = adw::Window::builder()
-            // disable F10 opening the app menu,
-            // since we don't even have an app menu
-            .handle_menubar_accel(false)
-            .resizable(window_attributes.resizable)
-            .title(window_attributes.title)
-            .maximized(window_attributes.maximized)
-            .visible(window_attributes.visible)
-            .decorated(window_attributes.decorations);
-
-        let builder = if let Some(surface_size) = window_attributes.surface_size {
-            // `width`, `height` are accepted as application (logical) units
-            // so scale factor is 1
-            // TODO i32 handling
-            let LogicalSize { width, height } = surface_size.to_logical::<i32>(1.0);
-            builder.default_width(width).default_height(height)
-        } else {
-            builder
-        };
-
-        let builder = if let Some(min_surface_size) = window_attributes.min_surface_size {
-            // see above
-            // TODO i32 handling
-            let LogicalSize { width, height } = min_surface_size.to_logical::<i32>(1.0);
-            builder.width_request(width).height_request(height)
-        } else {
-            builder
-        };
-
-        if let Some(preferred_theme) = window_attributes.preferred_theme {
-            // TODO: do we want to force instead?
-            let color_scheme = match preferred_theme {
-                Theme::Light => adw::ColorScheme::PreferLight,
-                Theme::Dark => adw::ColorScheme::PreferDark,
-            };
-            // TODO: this changes the style of *all* windows
-            adw::StyleManager::default().set_color_scheme(color_scheme);
-        }
-
-        let window = builder.build();
-
-        if let Some(fullscreen) = window_attributes.fullscreen {
-            match fullscreen {
-                Fullscreen::Exclusive(_) => { /* unsupported */ },
-                Fullscreen::Borderless(Some(monitor)) => {
-                    window.fullscreen_on_monitor(&monitor.inner.inner);
-                },
-                Fullscreen::Borderless(None) => {
-                    window.fullscreen();
-                },
-            }
-        }
-
-        // TODO `platform_specific`
-
-        // `max_surface_size` unsupported
-        // `surface_resize_increments` unsupported
-        // `position` unsupported - removed in GTK4, was X11 specific: <https://docs.gtk.org/gtk4/migrating-3to4.html>
-        // `transparent` unsupported
-        // `blur` unsupported
-        // TODO `window_icon`
-        // `content_protected` unsupported
-        // `window_level` unsupported
-        // `active` unsupported
-        // TODO `cursor`
-        // `parent_window` unsupported
-
-        todo!()
+        Ok(Box::new(Window::new(window_attributes)))
     }
 
     fn create_custom_cursor(
@@ -176,9 +108,9 @@ impl crate::event_loop::ActiveEventLoop for ActiveEventLoop {
 
     fn system_theme(&self) -> Option<Theme> {
         match adw::StyleManager::default().color_scheme() {
-            ColorScheme::Default => None,
-            ColorScheme::PreferLight | ColorScheme::ForceLight => Some(Theme::Light),
-            ColorScheme::PreferDark | ColorScheme::ForceDark => Some(Theme::Dark),
+            adw::ColorScheme::Default => None,
+            adw::ColorScheme::PreferLight | adw::ColorScheme::ForceLight => Some(Theme::Light),
+            adw::ColorScheme::PreferDark | adw::ColorScheme::ForceDark => Some(Theme::Dark),
             _ => None,
         }
     }
